@@ -21,7 +21,7 @@ const gameBoard = (function() {
             return true;
         } else return false;
     }
-    function resetBoard() {
+    function clearBoard() {
         board.forEach((_, i) => board[i] = null);
     }
     function checkGameOver() {
@@ -38,7 +38,7 @@ const gameBoard = (function() {
     return {
         getBoard,
         addMark,
-        resetBoard,
+        clearBoard,
         checkGameOver,
     }
 })();
@@ -46,20 +46,27 @@ const gameBoard = (function() {
 const displayController = (function() {
     let players;
     let currentPlayer;
-    let gameOver = false;
+    let gameOver = true;
 
     //cacheDOM 
     const squareElements = Array.from(document.querySelectorAll('.square'));
+    const xMark = document.querySelector('#x-mark-template').textContent;
+    const circleMark = document.querySelector('#circle-mark-template').textContent;
+
     //bindEvents
     squareElements.forEach((square, i) => square.addEventListener('click', () => drawMark(i, currentPlayer.mark)))
 
-    function render(board) {
-        squareElements.forEach((square, i) => square.textContent = board[i] ?? '');
+    function eraseMarks() {
+        squareElements.forEach(square => square.innerHTML = '');
     }
+
     function drawMark(index, mark) { 
         if(gameOver) return
         else if(gameBoard.addMark(index, mark)) {
-            render(gameBoard.getBoard());
+
+            if(mark === 'x') squareElements[index].innerHTML = xMark;
+            else if(mark === 'o') squareElements[index].innerHTML = circleMark;
+
             let turnInfo = gameBoard.checkGameOver();
             if(turnInfo.winner) {
                 gameOver = true;
@@ -73,6 +80,7 @@ const displayController = (function() {
     function setPlayers(player1, player2) {
         players = [player1, player2];
         currentPlayer = players[0];
+        gameOver = false;
     }
     function changeTurn() {
         currentPlayer = currentPlayer === players[0] ? players[1] : players[0];
@@ -83,12 +91,17 @@ const displayController = (function() {
     function announceTie() {
         console.log('it\'s a tie');
     }
+    function resetBoard() {
+        gameBoard.clearBoard();
+        eraseMarks();
+        gameOver = false;
+    }
 
     return {
         drawMark,
         setPlayers,
-        render
+        resetBoard,
     }
 })();
 
-displayController.setPlayers({mark: 'X'}, {mark: 'O'});
+displayController.setPlayers({mark: 'x'}, {mark: 'o'});

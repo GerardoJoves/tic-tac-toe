@@ -8,23 +8,63 @@
   
 html {
     font-size: 62.5%;
+    --main-background: rgb(31, 31, 31);
+    --main-font-color: rgb(230, 230, 230);
 }
 
 body {
     min-height: 100vh;
     display: grid;
     place-content: center;
+    background-color: var(--main-background);
 }
 
 .game-board {
     width: 500px;
     height: 500px;
-    background-color: grey;
+    background-color: var(--main-font-color);
     display: grid;
     grid-template: repeat(3, 1fr) / repeat(3, 1fr);
     gap: 10px;
 }
 
 .game-board .square {
-    background-color: white;
+    background-color: var(--main-background);
+    display: grid;
+    place-items: center;
+    font-weight: bold;
+    font-family: sans-serif;
+    color: var(--main-font-color);
+}
+
+svg.mark {
+    stroke: var(--main-font-color);
+    stroke-width: 1rem;
+    stroke-linecap: round;
+    width: 10rem;
+    height: 10rem;
+}
+
+svg.x line{
+    stroke-dasharray: 114 114;
+    stroke-dashoffset: 114;
+}
+
+svg.x .first-line {
+    animation: drawMark .4s forwards;
+}
+
+svg.x .second-line {
+    animation: drawMark .4s forwards;
+    animation-delay: .4s;
+}
+
+svg circle {
+    stroke-dasharray: 252 252;
+    stroke-dashoffset: 252;
+    animation: drawMark .8s forwards;
+}
+
+@keyframes drawMark {
+    to {stroke-dashoffset: 0;}
 }
