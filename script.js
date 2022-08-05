@@ -47,14 +47,30 @@ const displayController = (function() {
     let players;
     let currentPlayer;
     let gameOver = true;
+    let xWonRounds = 0;
+    let oWonRounds = 0;
 
     //cacheDOM 
     const squareElements = Array.from(document.querySelectorAll('.square'));
     const xMark = document.querySelector('#x-mark-template').textContent;
     const circleMark = document.querySelector('#circle-mark-template').textContent;
+    const restartBtn = document.querySelector('.restart');
+    const xCounterEl = document.querySelector('#x-counter');
+    const oCounterEl = document.querySelector('#o-counter');
+    const boardEl = document.querySelector('.game-board');
 
     //bindEvents
-    squareElements.forEach((square, i) => square.addEventListener('click', () => drawMark(i, currentPlayer.mark)))
+    squareElements.forEach((square, i) => square.addEventListener('click', () => drawMark(i, currentPlayer.mark)));
+    restartBtn.addEventListener('click', function() {
+        startNewRound();
+        resetCounters();
+    });
+    boardEl.addEventListener('click', function(e) {
+        if(gameOver) {
+            startNewRound();
+            e.stopPropagation();
+        }
+    }, {capture: true});
 
     function eraseMarks() {
         squareElements.forEach(square => square.innerHTML = '');
@@ -86,7 +102,26 @@ const displayController = (function() {
         currentPlayer = currentPlayer === players[0] ? players[1] : players[0];
     }
     function announceWinner(winnerMark) {
+        if(winnerMark) {
+            if(winnerMark === 'x') xWonRounds++
+            else oWonRounds++
+            updateCounters();
+        }
         console.log(`${winnerMark} wins`)
+    }
+    function startNewRound() {
+        gameBoard.clearBoard();
+        eraseMarks();
+        gameOver = false;
+    }
+    function resetCounters() {
+        xWonRounds = 0;
+        oWonRounds = 0;
+        updateCounters();
+    }
+    function updateCounters() {
+        xCounterEl.textContent = xWonRounds;
+        oCounterEl.textContent = oWonRounds;
     }
     function announceTie() {
         console.log('it\'s a tie');
