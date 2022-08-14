@@ -15,10 +15,50 @@ html {
 body {
     min-height: 100vh;
     display: grid;
-    grid-template-rows: auto auto;
+    grid-auto-flow: row;
     justify-items: center;
     align-content: center;
     background-color: var(--main-background);
+    color: var(--main-font-color);
+    font-family: monospace;
+}
+
+.msg-display {
+    height: 50px;
+}
+
+.msg-display .text {
+    font-size: 3.5rem;
+    width: 0;
+    display: none;
+    overflow: hidden;
+    white-space: nowrap;
+    position: relative;
+    padding-right: 5px;
+}
+
+.text::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    width: 5px;
+    background-color: var(--main-font-color);
+    animation: blinking .8s infinite;
+}
+
+.msg-display .text.visible {
+    display: block;
+    animation: typing-effect .8s steps(17, end) forwards;
+}
+
+@keyframes blinking {
+    to {background-color: transparent;}
+}
+
+@keyframes typing-effect {
+    to {width: 100%;}
 }
 
 .game-board {
@@ -54,18 +94,18 @@ svg.x line{
 }
 
 svg.x .first-line {
-    animation: drawMark .4s forwards;
+    animation: drawMark .3s forwards;
 }
 
 svg.x .second-line {
-    animation: drawMark .4s forwards;
-    animation-delay: .4s;
+    animation: drawMark .3s forwards;
+    animation-delay: .3s;
 }
 
 svg circle {
     stroke-dasharray: 252 252;
     stroke-dashoffset: 252;
-    animation: drawMark .8s forwards;
+    animation: drawMark .6s forwards;
 }
 
 @keyframes drawMark {
@@ -110,5 +150,8 @@ svg circle {
     }
     .controls .restart {
         padding: 5px 8px;
+    }
+    .msg-display .text{
+        font-size: 2.5rem;
     }
 }

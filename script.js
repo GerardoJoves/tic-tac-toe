@@ -24,15 +24,18 @@ const gameBoard = (function() {
     function clearBoard() {
         board.forEach((_, i) => board[i] = null);
     }
-    function checkGameOver() {
+    function checkGameOver(gameBoard = board) {
         for(let [a, b, c] of winCases) {
-            let mark = board[a];
-            if(mark !== null && board[b] === mark && board[c] === mark) {
-                return {winner: true, winnerMark: mark}
+            let mark = gameBoard[a];
+            if(mark !== null && gameBoard[b] === mark && gameBoard[c] === mark) {
+                return {winner: true, winnerMark: mark, squares: [a, b, c], gameOver: true}
             }
         }
-        if(board.some(spot => spot === null)) return {winner: false}
-        else return {tie: true}
+        if(gameBoard.some(spot => spot === null)) return {winner: false, gameOver: false}
+        else return {tie: true, winner: false, gameOver: true}
+    }
+    function getWinCases() {
+        return [...winCases]
     }
 
     return {
@@ -40,6 +43,7 @@ const gameBoard = (function() {
         addMark,
         clearBoard,
         checkGameOver,
+        winCases,
     }
 })();
 
@@ -58,6 +62,7 @@ const displayController = (function() {
     const xCounterEl = document.querySelector('#x-counter');
     const oCounterEl = document.querySelector('#o-counter');
     const boardEl = document.querySelector('.game-board');
+    const msgDisplayElement = document.querySelector('.msg-display .text');
 
     //bindEvents
     squareElements.forEach((square, i) => square.addEventListener('click', () => drawMark(i, currentPlayer.mark)));
@@ -107,12 +112,21 @@ const displayController = (function() {
             else oWonRounds++
             updateCounters();
         }
-        console.log(`${winnerMark} wins`)
+        displayMsg(`${winnerMark.toUpperCase()} wins this round`);
+    }
+    function displayMsg(msg) {
+        msgDisplayElement.textContent = msg;
+        msgDisplayElement.classList.add('visible');
+    }
+    function hideMsg() {
+        msgDisplayElement.classList.remove('visible');
     }
     function startNewRound() {
         gameBoard.clearBoard();
         eraseMarks();
         gameOver = false;
+        hideMsg();
+        currentPlayer = players[0];
     }
     function resetCounters() {
         xWonRounds = 0;
@@ -124,7 +138,7 @@ const displayController = (function() {
         oCounterEl.textContent = oWonRounds;
     }
     function announceTie() {
-        console.log('it\'s a tie');
+        displayMsg('It\'s a tie')
     }
     function resetBoard() {
         gameBoard.clearBoard();
@@ -140,3 +154,57 @@ const displayController = (function() {
 })();
 
 displayController.setPlayers({mark: 'x'}, {mark: 'o'});
+
+const AIPlayer = (function() {
+    let playerMark = 'x';
+    let oppntMark = 'o';
+
+    function calculateUtility(boardState) {
+        let utility = 0;
+
+        for(let adjacentCells of gameBoard.winCases) {
+            let markCounter = 0;
+            let oppntCounter = 0;
+            let emptyCells = 0;
+            adjacentCells.forEach(cell => {
+                if(boardState[cell] === playerMark) markCounter++;
+                else if(boardState[cell] === oppntMark) oppntCounter++;
+                else emptyCells++;
+            });
+
+            if(emptyCells === 3) continue 
+            else if(markCounter === 3) utility += 1000;
+            else if(oppntCounter === 2 && markCounter === 1) utility += 100;
+            else if(markCounter === 2 && emptyCells === 1) utility += 10;
+            else if(markCounter === 1 && emptyCells === 2) utility += 1;
+            else if(markCounter === 1 && oppntCounter === 1 && emptyCells === 1) utility += 0.1;
+        }
+
+        return utility;1
+    }
+
+    function getNextMove(currentBoard) {
+        const bestMove = {
+            index: null,
+            utility: 0,
+        }
+
+        currentBoard.forEach((cell, index) => {
+            if(cell != null) return;
+
+            let potentialMove = [...currentBoard];
+            potentialMove[index] = playerMark;
+
+            let potentialUtility = calculateUtility(potentialMove);
+            if(bestMove.index === null || potentialUtility > bestMove.utility) {
+                [bestMove.index, bestMove.utility] = [index, potentialUtility];
+            } 
+        });
+
+        return bestMove;
+    }
+
+    return {
+        getNextMove,
+    }
+})();
