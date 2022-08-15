@@ -13,11 +13,12 @@ html {
 }
 
 body {
+    padding-top: 30px;
     min-height: 100vh;
     display: grid;
     grid-auto-flow: row;
     justify-items: center;
-    align-content: center;
+    align-content: start;
     background-color: var(--main-background);
     color: var(--main-font-color);
     font-family: monospace;
@@ -62,8 +63,8 @@ body {
 }
 
 .game-board {
-    width: max(30vw, 300px);
-    height: max(30vw, 300px);
+    width: clamp(240px, calc(15vw + 20vh), 320px);
+    height: clamp(240px, calc(15vw + 20vh), 320px);
     background-color: var(--main-font-color);
     display: grid;
     grid-template: repeat(3, 1fr) / repeat(3, 1fr);
@@ -84,8 +85,8 @@ svg.mark {
     stroke: var(--main-font-color);
     stroke-width: 15px;
     stroke-linecap: round;
-    width: max(6vw, 64px);
-    height: max(6vw, 64px);
+    width: 60px;
+    height: 60px;
 }
 
 svg.x line{
@@ -114,16 +115,17 @@ svg circle {
 
 .controls {
     background-color: var(--main-background);
-    width: clamp(30vw, 400px, 100%);
-    height: 70px;
     border-top: 2px solid var(--main-font-color);
     display: grid;
-    gap: 5px;
-    grid-template-columns: 1fr 1fr 1fr;
+    column-gap: min(80px, 8vw);
+    row-gap: 15px;
+    padding: 10px 2vw 0 2vw;
+    grid-template-columns: 1fr 1fr;
+    margin-bottom: 10px;
     place-items: center;
 }
 
-.controls .stats, .controls .restart {
+.controls .stats, .controls button {
     text-align: center;
     color: var(--main-font-color);
     font-size: 2rem;
@@ -131,7 +133,7 @@ svg circle {
     width: max-content;
 }
 
-.controls .restart {
+.controls button {
     background-color: var(--main-background);
     font-weight: bold;
     border-radius: 5px;
@@ -139,16 +141,27 @@ svg circle {
     padding: 10px 16px;
 }
 
-.controls .restart:hover {
+.controls button:hover {
     background-color: var(--main-font-color);
     color: var(--main-background);
 }
 
+.controls .change-game-mode {
+    display: grid;
+    grid-auto-flow: column;
+    column-gap: 10px;
+    place-items: center;
+}
+
+.controls .icon.player-two {
+    display: none;
+}
+
 @media only screen and (max-width: 450px) {
-    .controls .stats, .controls .restart {
+    .controls .stats {
         font-size: 1.4rem;
     }
-    .controls .restart {
+    .controls button {
         padding: 5px 8px;
     }
     .msg-display .text{

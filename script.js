@@ -47,117 +47,9 @@ const gameBoard = (function() {
     }
 })();
 
-const displayController = (function() {
-    let players;
-    let currentPlayer;
-    let gameOver = true;
-    let xWonRounds = 0;
-    let oWonRounds = 0;
-
-    //cacheDOM 
-    const squareElements = Array.from(document.querySelectorAll('.square'));
-    const xMark = document.querySelector('#x-mark-template').textContent;
-    const circleMark = document.querySelector('#circle-mark-template').textContent;
-    const restartBtn = document.querySelector('.restart');
-    const xCounterEl = document.querySelector('#x-counter');
-    const oCounterEl = document.querySelector('#o-counter');
-    const boardEl = document.querySelector('.game-board');
-    const msgDisplayElement = document.querySelector('.msg-display .text');
-
-    //bindEvents
-    squareElements.forEach((square, i) => square.addEventListener('click', () => drawMark(i, currentPlayer.mark)));
-    restartBtn.addEventListener('click', function() {
-        startNewRound();
-        resetCounters();
-    });
-    boardEl.addEventListener('click', function(e) {
-        if(gameOver) {
-            startNewRound();
-            e.stopPropagation();
-        }
-    }, {capture: true});
-
-    function eraseMarks() {
-        squareElements.forEach(square => square.innerHTML = '');
-    }
-
-    function drawMark(index, mark) { 
-        if(gameOver) return
-        else if(gameBoard.addMark(index, mark)) {
-
-            if(mark === 'x') squareElements[index].innerHTML = xMark;
-            else if(mark === 'o') squareElements[index].innerHTML = circleMark;
-
-            let turnInfo = gameBoard.checkGameOver();
-            if(turnInfo.winner) {
-                gameOver = true;
-                announceWinner(turnInfo.winnerMark);
-            } else if(turnInfo.tie) {
-                gameOver = true;
-                announceTie();
-            } else changeTurn();
-        }
-    }
-    function setPlayers(player1, player2) {
-        players = [player1, player2];
-        currentPlayer = players[0];
-        gameOver = false;
-    }
-    function changeTurn() {
-        currentPlayer = currentPlayer === players[0] ? players[1] : players[0];
-    }
-    function announceWinner(winnerMark) {
-        if(winnerMark) {
-            if(winnerMark === 'x') xWonRounds++
-            else oWonRounds++
-            updateCounters();
-        }
-        displayMsg(`${winnerMark.toUpperCase()} wins this round`);
-    }
-    function displayMsg(msg) {
-        msgDisplayElement.textContent = msg;
-        msgDisplayElement.classList.add('visible');
-    }
-    function hideMsg() {
-        msgDisplayElement.classList.remove('visible');
-    }
-    function startNewRound() {
-        gameBoard.clearBoard();
-        eraseMarks();
-        gameOver = false;
-        hideMsg();
-        currentPlayer = players[0];
-    }
-    function resetCounters() {
-        xWonRounds = 0;
-        oWonRounds = 0;
-        updateCounters();
-    }
-    function updateCounters() {
-        xCounterEl.textContent = xWonRounds;
-        oCounterEl.textContent = oWonRounds;
-    }
-    function announceTie() {
-        displayMsg('It\'s a tie')
-    }
-    function resetBoard() {
-        gameBoard.clearBoard();
-        eraseMarks();
-        gameOver = false;
-    }
-
-    return {
-        drawMark,
-        setPlayers,
-        resetBoard,
-    }
-})();
-
-displayController.setPlayers({mark: 'x'}, {mark: 'o'});
-
 const AIPlayer = (function() {
-    let playerMark = 'x';
-    let oppntMark = 'o';
+    let playerMark = 'o';
+    let oppntMark = 'x';
 
     function calculateUtility(boardState) {
         let utility = 0;
@@ -208,3 +100,145 @@ const AIPlayer = (function() {
         getNextMove,
     }
 })();
+
+const displayController = (function() {
+    let players;
+    let currentPlayer;
+    let againstAI = false; 
+    let AIturn = false; 
+    let gameOver = true;
+    let xWonRounds = 0;
+    let oWonRounds = 0;
+
+    //cacheDOM 
+    const squareElements = Array.from(document.querySelectorAll('.square'));
+    const xMark = document.querySelector('#x-mark-template').textContent;
+    const circleMark = document.querySelector('#circle-mark-template').textContent;
+    const restartBtn = document.querySelector('.restart');
+    const changeGameModeBtn = document.querySelector('.change-game-mode');
+    const xCounterEl = document.querySelector('#x-counter');
+    const oCounterEl = document.querySelector('#o-counter');
+    const boardEl = document.querySelector('.game-board');
+    const msgDisplayElement = document.querySelector('.msg-display .text');
+    //icons
+    const playerTwoIcon = document.querySelector('.player-two.icon');
+    const aiIcon = document.querySelector('.AI.icon');
+
+    //bindEvents
+    squareElements.forEach((square, i) => square.addEventListener('click', () => {
+        if(AIturn) return;
+        drawMark(i, currentPlayer.mark);
+    }));
+    restartBtn.addEventListener('click', function() {
+        startNewRound();
+        resetCounters();
+        AIturn = false;
+    });
+    changeGameModeBtn.addEventListener('click', changeGameMode);
+    boardEl.addEventListener('click', function(e) {
+        if(gameOver) {
+            startNewRound();
+            e.stopPropagation();
+        }
+    }, {capture: true});
+
+    function eraseMarks() {
+        squareElements.forEach(square => square.innerHTML = '');
+    }
+
+    function drawMark(index, mark) { 
+        if(gameOver) return
+        else if(gameBoard.addMark(index, mark)) {
+
+            if(mark === 'x') squareElements[index].innerHTML = xMark;
+            else if(mark === 'o') squareElements[index].innerHTML = circleMark;
+
+            let turnInfo = gameBoard.checkGameOver();
+            if(turnInfo.winner) {
+                gameOver = true;
+                announceWinner(turnInfo.winnerMark);
+            } else if(turnInfo.tie) {
+                gameOver = true;
+                announceTie(); 
+            } else changeTurn();
+
+            if(againstAI && !AIturn) {
+                AIturn = true;
+                setTimeout(function() {
+                    drawMark(AIPlayer.getNextMove(gameBoard.getBoard()).index, currentPlayer.mark);
+                }, 500);
+            } else if(againstAI && AIturn) AIturn = false;
+        }
+    }
+    function setPlayers(player1, player2) {
+        players = [player1, player2];
+        currentPlayer = players[0];
+        gameOver = false;
+    }
+    function changeTurn() {
+        currentPlayer = currentPlayer === players[0] ? players[1] : players[0];
+    }
+    function announceWinner(winnerMark) {
+        if(winnerMark) {
+            if(winnerMark === 'x') xWonRounds++
+            else oWonRounds++
+            updateCounters();
+        }
+        displayMsg(`${winnerMark.toUpperCase()} wins this round`);
+    }
+    function displayMsg(msg) {
+        msgDisplayElement.textContent = msg;
+        msgDisplayElement.classList.add('visible');
+    }
+    function hideMsg() {
+        msgDisplayElement.classList.remove('visible');
+    }
+    function startNewRound() {
+        gameBoard.clearBoard();
+        eraseMarks();
+        gameOver = false;
+        AIturn = false;
+        hideMsg();
+        currentPlayer = players[0];
+    }
+    function resetCounters() {
+        xWonRounds = 0;
+        oWonRounds = 0;
+        updateCounters();
+    }
+    function updateCounters() {
+        xCounterEl.textContent = xWonRounds;
+        oCounterEl.textContent = oWonRounds;
+    }
+    function announceTie() {
+        displayMsg('It\'s a tie')
+    }
+    function resetBoard() {
+        gameBoard.clearBoard();
+        eraseMarks();
+        gameOver = false;
+    }
+    function changeGameMode() {
+        if(againstAI) {
+            playerTwoIcon.style.display = 'block';
+            aiIcon.style.display = 'none';
+            againstAI = false;
+        } else {
+            playerTwoIcon.style.display = 'none';
+            aiIcon.style.display = 'block';
+            againstAI = true;
+            AIturn = false;
+        }
+
+        startNewRound();
+        resetCounters();
+    }
+
+    return {
+        drawMark,
+        setPlayers,
+        resetBoard,
+    }
+})();
+
+displayController.setPlayers({mark: 'x'}, {mark: 'o'});
